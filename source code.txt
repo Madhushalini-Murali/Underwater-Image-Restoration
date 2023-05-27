@@ -1,0 +1,62 @@
+clc;  % Clear the command window
+
+clear all;  % Clear all variables from the workspace
+close all;  % Close all figure windows
+
+tic  % Start a timer
+
+addpath subfunction  % Add a subfunction path
+
+[filename, pathname] = uigetfile('*.jpg', 'Pick an Image');
+% Open a file dialog to select an image
+% '*.jpg' specifies that only JPEG files are shown
+% 'Pick an Image' is the dialog title
+
+if isequal(filename,0) | isequal(pathname,0)
+    warndlg('File is not selected');
+    % If no file is selected, display a warning dialog
+else
+    img=imread(fullfile(pathname,filename));
+    % Read the selected image
+end
+
+img1 = SimplestColorBalance(img);
+% Apply color balance to the image
+
+figure(1),imshow(img),title('Input Image')  % Display the input image
+
+lab1 = rgb_to_lab(img1);  % Convert the image to the Lab color space
+figure,imshow(lab1)  % Display the Lab color space image
+
+lab2 = lab1;
+lab2(:, :, 1) = adapthisteq(lab2(:, :, 1));
+% Apply adaptive histogram equalization to the L channel of the Lab image
+
+img2 = lab_to_rgb(lab2);  % Convert the modified Lab image back to RGB
+figure(2),imshow(img2),title('Adaptive Histogram Image')  % Display the modified image
+
+R1 = double(lab1(:, :, 1)) / 255;  % Normalize the L channel of the Lab image
+
+% Perform various image processing operations...
+
+% Perform calculations and image fusion...
+
+% Display the final images
+
+fusion = cat(3, uint8(R), uint8(G), uint8(B));
+% Concatenate the reconstructed R, G, B channels to form the fused image
+
+z=entropy(fusion);  % Calculate the entropy of the fused image
+
+m=mean2(img)-mean2(fusion);  % Calculate the difference in mean values between the input and fused images
+
+peaksnr = psnr(fusion,img2);  % Calculate the Peak Signal-to-Noise Ratio between the fused and input images
+
+ssimval = ssim(fusion,img1);  % Calculate the Structural Similarity Index (SSIM) between the fused and input images
+
+err = immse(fusion,img1);  % Calculate the Mean Squared Error (MSE) between the fused and input images
+
+% Display the resulting images
+
+figure,imshow([img, img2, fusion]),title(' different stages of image')
+figure, imshow([img, fusion]),title('input image and fusion image')
